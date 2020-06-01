@@ -1,4 +1,5 @@
 #include <QToolButton>
+#include <QPlainTextEdit>
 #include <QLabel>
 #include <QSpinBox>
 #include <QSlider>
@@ -73,9 +74,17 @@ MainWindow::MainWindow(QWidget *parent)
   });
 
   /* 翻译界面 */
+  //文本内容改变取消收藏
+  connect(ui->transInput,&QPlainTextEdit::textChanged,[=](){
+    ui->favorBtn->setChecked(false);
+    ui->favorBtn->setIcon(QIcon(":/icon/favor.png"));
+  });
   //查找按钮
   connect(ui->getTransBtn,&QToolButton::clicked,[=](){
-    QUrl url("https://api.vvhan.com/api/love"); //请求地址
+    networkObj->dataStr="请稍候...";
+    QString str="http://test.cpp-homework.su29029.xyz/translate?query="+ui->transInput->toPlainText();
+    QUrl url(str);
+    qDebug()<<url;
     networkObj->get(url); //发送get请求
     trans_timer->start(500);
   });
@@ -282,7 +291,7 @@ MainWindow::MainWindow(QWidget *parent)
   trans_timer=new QTimer(this);
   connect(trans_timer,&QTimer::timeout,[=](){
     qDebug()<<"翻译同步中";
-    ui->transResult->setText(networkObj->dataStr);
+    ui->transResult->setText(networkObj->dataStr.trimmed());
   });
 
   // 练习题同步
@@ -290,9 +299,9 @@ MainWindow::MainWindow(QWidget *parent)
   connect(practice_timer,&QTimer::timeout,[=](){
     qDebug()<<"练习同步中";
     ui->practice_question->setText("hello");
-    ui->aAnswer->setText("a");
-    ui->bAnswer->setText("b");
-    ui->cAnswer->setText("c");
+    ui->aAnswer->setText("你好");
+    ui->bAnswer->setText("再见");
+    ui->cAnswer->setText("谢谢");
     answer_list[question_index]='a';
     question_list[question_index]="hello";
     solution_list[question_index]="你好";
