@@ -232,7 +232,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="transPage">
      <widget class="QPlainTextEdit" name="transInput">
@@ -832,7 +832,7 @@ background-color: rgb(226, 32, 24);</string>
        <string>单词：</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_10">
+     <widget class="QLabel" name="practice_question">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -916,29 +916,6 @@ background-color: rgb(226, 32, 24);</string>
        <string>下一题！</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="practiceStopBtn">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>480</y>
-        <width>241</width>
-        <height>61</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>黑体</family>
-        <pointsize>16</pointsize>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(255, 255, 255);
-background-color: rgb(226, 32, 24);</string>
-      </property>
-      <property name="text">
-       <string>不做了我累了</string>
-      </property>
-     </widget>
      <widget class="Line" name="line_8">
       <property name="geometry">
        <rect>
@@ -995,7 +972,7 @@ background-color: rgb(226, 32, 24);</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QLabel" name="aLabel">
+        <widget class="QLabel" name="aAnswer">
          <property name="font">
           <font>
            <family>黑体</family>
@@ -1008,7 +985,7 @@ background-color: rgb(226, 32, 24);</string>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="bLabel">
+        <widget class="QLabel" name="bAnswer">
          <property name="font">
           <font>
            <family>黑体</family>
@@ -1021,7 +998,7 @@ background-color: rgb(226, 32, 24);</string>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="cLabel">
+        <widget class="QLabel" name="cAnswer">
          <property name="font">
           <font>
            <family>黑体</family>
@@ -1036,7 +1013,154 @@ background-color: rgb(226, 32, 24);</string>
       </layout>
      </widget>
     </widget>
-    <widget class="QWidget" name="practiceEndPage"/>
+    <widget class="QWidget" name="practiceEndPage">
+     <widget class="QListWidget" name="questionStatisticsList">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>491</width>
+        <height>401</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="backBtnEnd">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>490</y>
+        <width>151</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>黑体</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(226, 32, 24);</string>
+      </property>
+      <property name="text">
+       <string>返回</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="createResultBtn">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>490</y>
+        <width>221</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>黑体</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(226, 32, 24);</string>
+      </property>
+      <property name="text">
+       <string>生成统计结果</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>491</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <family>黑体</family>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>总题数：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="totalNumEnd">
+         <property name="font">
+          <font>
+           <family>黑体</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>NaN</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="font">
+          <font>
+           <family>黑体</family>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>错题数：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="errorNumEnd">
+         <property name="font">
+          <font>
+           <family>黑体</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>NaN</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="font">
+          <font>
+           <family>黑体</family>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>正确率：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="correctRateEnd">
+         <property name="font">
+          <font>
+           <family>黑体</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>NaN</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

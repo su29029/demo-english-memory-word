@@ -10,8 +10,15 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QTextToSpeech>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QNetworkAccessManager>
+#include <QTimer>
+#include <QFileDialog>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "networksupport.h"
 
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
@@ -32,6 +39,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->favorBtn->setChecked(false);
     ui->favorBtn->setIcon(QIcon(":/icon/favor.png"));
     ui->transInput->setPlainText("");
+    ui->transResult->setText("");
+    networkObj->dataStr="";
+    trans_timer->stop();
+    practice_timer->stop();
   });
 
   //词典按钮
@@ -43,6 +54,30 @@ MainWindow::MainWindow(QWidget *parent)
     ui->transBtn->setIcon(QIcon(":/icon/trans.png"));
     ui->dictBtn->setIcon(QIcon(":/icon/dict_selected.png"));
     ui->practiceBtn->setIcon(QIcon(":/icon/practice.png"));
+    trans_timer->stop();
+    practice_timer->stop();
+  });
+
+
+  //练习按钮
+  connect(ui->practiceBtn,&QToolButton::clicked,[=](){
+    ui->stackedWidget->setCurrentIndex(2);
+    ui->practiceBtn->setChecked(true);
+    ui->transBtn->setChecked(false);
+    ui->dictBtn->setChecked(false);
+    ui->transBtn->setIcon(QIcon(":/icon/trans.png"));
+    ui->dictBtn->setIcon(QIcon(":/icon/dict.png"));
+    ui->practiceBtn->setIcon(QIcon(":/icon/practice_selected.png"));
+    trans_timer->stop();
+    practice_timer->stop();
+  });
+
+  /* 翻译界面 */
+  //查找按钮
+  connect(ui->getTransBtn,&QToolButton::clicked,[=](){
+    QUrl url("https://api.vvhan.com/api/love"); //请求地址
+    networkObj->get(url); //发送get请求
+    trans_timer->start(500);
   });
 
   //播音按钮
@@ -62,18 +97,6 @@ MainWindow::MainWindow(QWidget *parent)
       QMessageBox::warning(this,"请检查tts语音引擎","语音播放失败，您的电脑可能未安装tts语音引擎，请自行检查并安装！");
   });
 
-  //练习按钮
-  connect(ui->practiceBtn,&QToolButton::clicked,[=](){
-    ui->stackedWidget->setCurrentIndex(2);
-    ui->practiceBtn->setChecked(true);
-    ui->transBtn->setChecked(false);
-    ui->dictBtn->setChecked(false);
-    ui->transBtn->setIcon(QIcon(":/icon/trans.png"));
-    ui->dictBtn->setIcon(QIcon(":/icon/dict.png"));
-    ui->practiceBtn->setIcon(QIcon(":/icon/practice_selected.png"));
-  });
-
-  /* 翻译界面 */
   // 收藏按钮
   connect(ui->favorBtn,&QToolButton::clicked,[=](){
     if(ui->favorBtn->isChecked() && ui->transInput->toPlainText()!=""){
@@ -136,17 +159,85 @@ MainWindow::MainWindow(QWidget *parent)
     ui->currentNum->setNum(1);
     ui->stackedWidget->setCurrentIndex(3);
     ui->aRadio->setChecked(true);
+    practice_timer->start(500);
+    question_index=0;
+    my_answer_list.clear();
+    for(int i=0;i<ui->practiceNumSpinBox->value();++i){
+      answer_list.append(0);
+      question_list.append("");
+      solution_list.append("");
+    }
+    ui->practiceNextBtn->setEnabled(false);
   });
 
   /* 练习界面 */
   // 下一题按钮
   connect(ui->practiceNextBtn,&QPushButton::clicked,[=](){
+    if(ui->aRadio->isChecked())
+      my_answer_list.append('a');
+    else if(ui->bRadio->isChecked())
+      my_answer_list.append('b');
+    else if(ui->cRadio->isChecked())
+      my_answer_list.append('c');
+
     ui->currentNum->setNum(ui->currentNum->text().toInt()+1);
     ui->aRadio->setChecked(true);
-    if(ui->currentNum->text().toInt()>ui->totalNum->text().toInt())
+
+    // 练习结束
+    if(ui->currentNum->text().toInt()>ui->totalNum->text().toInt()){
       ui->stackedWidget->setCurrentIndex(4);
+      practice_timer->stop();
+      ui->totalNumEnd->setNum(ui->practiceNumSpinBox->value());
+      int error_num=0;
+      for(int i=0;i<question_index;++i)
+        if(answer_list[i]!=my_answer_list[i])
+          ++error_num;
+      ui->errorNumEnd->setNum(error_num);
+      ui->correctRateEnd->setText(
+            QString::number((ui->practiceNumSpinBox->value()-error_num)*100/ui->practiceNumSpinBox->value())+"%");
+      ui->questionStatisticsList->clear();
+      ui->practiceNumSpinBox->setValue(5);
+
+      // 导入题目统计到列表
+      for(int i=0;i<=question_index;++i){
+        QString question=question_list[i];
+        for(int i=question.length();i<16;++i)
+          question+=" ";
+        QString answer=solution_list[i];
+        for(int i=answer.length();i<12;++i)
+          answer+=" ";
+        if(answer_list[i]==my_answer_list[i])
+          ui->questionStatisticsList->addItem(question+answer+"正确");
+        else
+          ui->questionStatisticsList->addItem(question+answer+"错误");
+      }
+    }
+
+    ++question_index;
+    ui->practiceNextBtn->setEnabled(false);
   });
 
+  /* 练习结束界面 */
+  // 返回按钮
+  connect(ui->backBtnEnd,&QPushButton::clicked,[=](){
+    ui->stackedWidget->setCurrentIndex(2);
+  });
+
+  //统计结果按钮
+  connect(ui->createResultBtn,&QPushButton::clicked,[=](){
+    QString path=QFileDialog::getExistingDirectory(this,"保存到");
+    QFile save_file(path+"/我的错题.txt");
+    save_file.open(QIODevice::WriteOnly);
+    save_file.close();
+    if(!save_file.open(QIODevice::WriteOnly)){
+      QMessageBox::warning(this,"文件打开错误","文件打开错误，请检查路径是否正确！");
+    }else{
+      QTextStream stream(&save_file);
+      for(int i=0;i<question_index;++i)
+        stream<<ui->questionStatisticsList->item(i)->text()<<"\n";
+      save_file.close();
+    }
+  });
 
   /* 初始化 */
   ui->stackedWidget->setCurrentIndex(0);
@@ -181,10 +272,35 @@ MainWindow::MainWindow(QWidget *parent)
     QMessageBox::warning(this,"未找到词典文件","未找到词典文件，将为您重新创建词典文件！");
   }
   dict.close();
+
+  // http请求
+  networkObj = new NetworkSupport();
+  connect(networkObj,SIGNAL(requestSuccessSignal(QString)),this,SLOT(requestSuccess(QString)));
+  connect(networkObj,SIGNAL(requestFailSignal(QString)),this,SLOT(requestFail(QString)));
+
+  // 翻译结果同步
+  trans_timer=new QTimer(this);
+  connect(trans_timer,&QTimer::timeout,[=](){
+    qDebug()<<"翻译同步中";
+    ui->transResult->setText(networkObj->dataStr);
+  });
+
+  // 练习题同步
+  practice_timer=new QTimer(this);
+  connect(practice_timer,&QTimer::timeout,[=](){
+    qDebug()<<"练习同步中";
+    ui->practice_question->setText("hello");
+    ui->aAnswer->setText("a");
+    ui->bAnswer->setText("b");
+    ui->cAnswer->setText("c");
+    answer_list[question_index]='a';
+    question_list[question_index]="hello";
+    solution_list[question_index]="你好";
+    ui->practiceNextBtn->setEnabled(true);
+  });
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow(){
   // 存储词典
   QFile dict(QDir::currentPath()+"/dict.json");
   if(dict.open(QIODevice::WriteOnly)){
@@ -204,3 +320,12 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
+void MainWindow::requestFail(QString str){
+  qDebug() << "----------requestFail-------------";
+  qDebug() << str;
+}
+
+void MainWindow::requestSuccess(QString str){
+  qDebug() << "----------requestSuccess-------------";
+  qDebug() << str;
+}
